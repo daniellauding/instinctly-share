@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instinctly - Shared Image</title>
-    <script src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.min.js"></script>
+    <script src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.min.js" async></script>
     <style>
         * {
             margin: 0;
@@ -220,7 +220,7 @@
                 apiToken: '300fd65339c10574c9ee00ecd671a206e2f1bff39471036418f595d6e002ec86',
                 persist: true
             },
-            environment: 'production' // or 'development'
+            environment: 'development' // Use 'development' until you deploy to production
         };
 
         // Get share ID from URL
@@ -372,8 +372,22 @@
             }
         }
 
-        // Start
-        init();
+        // Wait for CloudKit to load, then start
+        function waitForCloudKit() {
+            if (typeof CloudKit !== 'undefined') {
+                init();
+            } else {
+                // CloudKit not loaded yet, wait and retry
+                setTimeout(waitForCloudKit, 100);
+            }
+        }
+
+        // Start when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForCloudKit);
+        } else {
+            waitForCloudKit();
+        }
     </script>
 </body>
 </html>
