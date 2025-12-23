@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instinctly - Shared Image</title>
+    <title>Instinctly - Shared Content</title>
     <script src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js" async></script>
     <style>
         * {
@@ -54,7 +54,7 @@
             justify-content: center;
         }
 
-        .image-container {
+        .content-container {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
             padding: 20px;
@@ -63,13 +63,18 @@
             margin-bottom: 20px;
         }
 
-        .shared-image {
+        .shared-image, .shared-video {
             max-width: 100%;
             max-height: 70vh;
             border-radius: 8px;
             display: block;
             margin: 0 auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .shared-audio {
+            width: 100%;
+            margin: 40px 0;
         }
 
         .loading {
@@ -102,11 +107,104 @@
             margin-bottom: 20px;
         }
 
+        /* Password Form */
+        .password-form {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .password-form .lock-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .password-form h2 {
+            margin-bottom: 10px;
+        }
+
+        .password-form p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 24px;
+        }
+
+        .password-input-group {
+            display: flex;
+            gap: 12px;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        .password-input-group input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .password-input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .password-input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .password-error {
+            color: #ff6b6b;
+            margin-top: 16px;
+            display: none;
+        }
+
+        /* Meta info */
+        .meta-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .meta-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .meta-info {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .meta-info span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .collection-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            font-size: 12px;
+            color: #a5b4fc;
+            margin-top: 8px;
+        }
+
         .actions {
             display: flex;
             justify-content: center;
             gap: 12px;
             flex-wrap: wrap;
+            margin-top: 20px;
         }
 
         .btn {
@@ -120,6 +218,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            text-decoration: none;
         }
 
         .btn-primary {
@@ -140,13 +239,6 @@
 
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.2);
-        }
-
-        .meta {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
-            margin-top: 20px;
         }
 
         .footer {
@@ -183,6 +275,41 @@
             font-size: 14px;
             margin-bottom: 15px;
         }
+
+        /* Text/PDF preview */
+        .text-preview {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .text-preview pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .pdf-frame {
+            width: 100%;
+            height: 70vh;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .audio-container {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .audio-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -201,7 +328,7 @@
         <div id="content">
             <div class="loading">
                 <div class="spinner"></div>
-                <p>Loading shared image...</p>
+                <p>Loading shared content...</p>
                 <p id="status" style="font-size: 12px; opacity: 0.6; margin-top: 10px;">Initializing...</p>
             </div>
         </div>
@@ -212,17 +339,19 @@
     </div>
 
     <script>
-        // Configuration - UPDATE THESE VALUES
+        // Configuration
         const CLOUDKIT_CONFIG = {
             containerIdentifier: 'iCloud.com.instinctly.app',
             apiTokenAuth: {
-                // You'll need to generate this in CloudKit Dashboard
-                // Go to: CloudKit Dashboard > API Tokens > Create a new token
                 apiToken: '300fd65339c10574c9ee00ecd671a206e2f1bff39471036418f595d6e002ec86',
                 persist: true
             },
-            environment: 'development' // Use 'development' until you deploy to production
+            environment: 'development'
         };
+
+        let currentRecord = null;
+        let storedPasswordHash = null;
+        let publicDB = null;
 
         // Get share ID from URL
         function getShareId() {
@@ -230,106 +359,240 @@
             return params.get('id') || params.get('share');
         }
 
+        // SHA-256 hash function (matches Swift implementation)
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         // Initialize CloudKit
         async function initCloudKit() {
             return new Promise((resolve, reject) => {
                 try {
-                    console.log('Configuring CloudKit with container:', CLOUDKIT_CONFIG.containerIdentifier);
-                    console.log('Environment:', CLOUDKIT_CONFIG.environment);
-
                     CloudKit.configure({
                         containers: [CLOUDKIT_CONFIG]
                     });
-
                     const container = CloudKit.getDefaultContainer();
-                    console.log('Container obtained:', container ? 'yes' : 'no');
-
-                    const publicDB = container.publicCloudDatabase;
-                    console.log('Public DB obtained:', publicDB ? 'yes' : 'no');
-
-                    console.log('CloudKit initialized successfully');
+                    publicDB = container.publicCloudDatabase;
                     resolve(publicDB);
                 } catch (error) {
-                    console.error('CloudKit init error:', error);
                     reject(error);
                 }
             });
         }
 
-        // Fetch shared image
-        async function fetchSharedImage(shareId) {
-            console.log('Fetching image with ID:', shareId);
+        // Fetch shared content
+        async function fetchSharedContent(shareId) {
+            const db = await initCloudKit();
+            const response = await db.fetchRecords([shareId]);
 
+            if (response.records && response.records.length > 0) {
+                const record = response.records[0];
+                if (record.serverErrorCode) {
+                    throw new Error(`Server error: ${record.serverErrorCode}`);
+                }
+                return record;
+            }
+
+            if (response.errors && response.errors.length > 0) {
+                throw new Error(response.errors[0].reason || 'Unknown error');
+            }
+
+            throw new Error('Content not found');
+        }
+
+        // Increment view count
+        async function incrementViewCount(shareId) {
             try {
-                const db = await initCloudKit();
-
-                // Try fetching by record name
-                console.log('Querying public database...');
-
-                const response = await db.fetchRecords([shareId]);
-
-                console.log('Response:', response);
-
+                // Fetch current record
+                const response = await publicDB.fetchRecords([shareId]);
                 if (response.records && response.records.length > 0) {
                     const record = response.records[0];
-                    console.log('Record found:', record);
+                    const currentCount = record.fields.viewCount?.value || 0;
 
-                    // Check for errors in the record
-                    if (record.serverErrorCode) {
-                        throw new Error(`Server error: ${record.serverErrorCode} - ${record.reason || 'Unknown'}`);
-                    }
+                    // Update with incremented count
+                    const operations = [{
+                        operationType: 'update',
+                        record: {
+                            recordType: 'SharedImage',
+                            recordName: shareId,
+                            recordChangeTag: record.recordChangeTag,
+                            fields: {
+                                viewCount: { value: currentCount + 1 }
+                            }
+                        }
+                    }];
 
-                    return {
-                        title: record.fields?.title?.value || 'Shared Image',
-                        imageAsset: record.fields?.imageAsset?.value,
-                        createdAt: record.fields?.createdAt?.value
-                    };
+                    await publicDB.performBatchOperations(operations);
+                    console.log('View count incremented to', currentCount + 1);
                 }
-
-                // If no records, check for errors
-                if (response.errors && response.errors.length > 0) {
-                    const err = response.errors[0];
-                    throw new Error(`CloudKit error: ${err.ckErrorCode || err.serverErrorCode} - ${err.reason || 'Unknown error'}`);
-                }
-
-                throw new Error('Image not found in CloudKit');
             } catch (error) {
-                console.error('Error fetching image:', error);
-                throw error;
+                console.log('Could not increment view count:', error.message);
+                // Non-critical, continue anyway
             }
         }
 
-        // Display image
-        function displayImage(data) {
+        // Show password form
+        function showPasswordForm() {
             const content = document.getElementById('content');
+            content.innerHTML = `
+                <div class="content-container">
+                    <div class="password-form">
+                        <div class="lock-icon">🔒</div>
+                        <h2>Password Protected</h2>
+                        <p>This content is password protected. Enter the password to view.</p>
+                        <div class="password-input-group">
+                            <input type="password" id="password-input" placeholder="Enter password" onkeypress="if(event.key==='Enter')verifyPassword()">
+                            <button class="btn btn-primary" onclick="verifyPassword()">Unlock</button>
+                        </div>
+                        <p id="password-error" class="password-error">Incorrect password. Please try again.</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('password-input').focus();
+        }
+
+        // Verify password
+        async function verifyPassword() {
+            const password = document.getElementById('password-input').value;
+            const hash = await hashPassword(password);
+
+            if (hash === storedPasswordHash) {
+                document.getElementById('password-error').style.display = 'none';
+                // Increment view count on successful unlock
+                incrementViewCount(getShareId());
+                displayContent(currentRecord);
+            } else {
+                document.getElementById('password-error').style.display = 'block';
+                document.getElementById('password-input').value = '';
+                document.getElementById('password-input').focus();
+            }
+        }
+
+        // Display content based on media type
+        function displayContent(record) {
+            const content = document.getElementById('content');
+            const fields = record.fields;
+
+            const title = fields.title?.value || fields.fileName?.value || 'Shared Content';
+            const mediaType = fields.mediaType?.value || 'image';
+            const viewCount = fields.viewCount?.value || 0;
+            const collection = fields.collection?.value;
+            const asset = fields.imageAsset?.value;
+            const downloadURL = asset?.downloadURL;
+
+            let mediaHTML = '';
+            let actionsHTML = '';
+
+            switch (mediaType) {
+                case 'image':
+                case 'gif':
+                    mediaHTML = `<img src="${downloadURL}" alt="${title}" class="shared-image" id="sharedMedia">`;
+                    actionsHTML = `
+                        <button class="btn btn-primary" onclick="downloadContent()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Download
+                        </button>
+                    `;
+                    break;
+
+                case 'video':
+                    mediaHTML = `<video src="${downloadURL}" controls autoplay class="shared-video" id="sharedMedia"></video>`;
+                    actionsHTML = `
+                        <a href="${downloadURL}" download="${title}" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Download Video
+                        </a>
+                    `;
+                    break;
+
+                case 'audio':
+                    mediaHTML = `
+                        <div class="audio-container">
+                            <div class="audio-icon">🎵</div>
+                            <h3>${title}</h3>
+                            <audio src="${downloadURL}" controls autoplay class="shared-audio" id="sharedMedia"></audio>
+                        </div>
+                    `;
+                    actionsHTML = `
+                        <a href="${downloadURL}" download="${title}" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Download Audio
+                        </a>
+                    `;
+                    break;
+
+                case 'pdf':
+                    mediaHTML = `<iframe src="${downloadURL}" class="pdf-frame"></iframe>`;
+                    actionsHTML = `
+                        <a href="${downloadURL}" download="${title}" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Download PDF
+                        </a>
+                    `;
+                    break;
+
+                case 'text':
+                    // Fetch and display text content
+                    mediaHTML = `<div class="text-preview" id="textPreview"><p>Loading text...</p></div>`;
+                    fetch(downloadURL)
+                        .then(r => r.text())
+                        .then(text => {
+                            document.getElementById('textPreview').innerHTML = `<pre>${escapeHtml(text)}</pre>`;
+                        });
+                    actionsHTML = `
+                        <a href="${downloadURL}" download="${title}" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Download File
+                        </a>
+                    `;
+                    break;
+
+                default:
+                    mediaHTML = `
+                        <div class="audio-container">
+                            <div class="audio-icon">📄</div>
+                            <h3>${title}</h3>
+                            <p style="color: rgba(255,255,255,0.6);">Preview not available for this file type.</p>
+                        </div>
+                    `;
+                    actionsHTML = `
+                        <a href="${downloadURL}" download="${title}" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Download File
+                        </a>
+                    `;
+            }
 
             content.innerHTML = `
-                <div class="image-container">
-                    <img src="${data.imageAsset.downloadURL}" alt="${data.title}" class="shared-image" id="sharedImage">
+                <div class="content-container">
+                    <div class="meta-bar">
+                        <div>
+                            <div class="meta-title">${escapeHtml(title)}</div>
+                            ${collection ? `<div class="collection-badge">📁 ${escapeHtml(collection)}</div>` : ''}
+                        </div>
+                        <div class="meta-info">
+                            <span>👁 ${viewCount} views</span>
+                            <span>${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)}</span>
+                        </div>
+                    </div>
+                    ${mediaHTML}
                 </div>
 
                 <div class="actions">
-                    <button class="btn btn-primary" onclick="downloadImage()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                        </svg>
-                        Download
-                    </button>
+                    ${actionsHTML}
                     <button class="btn btn-secondary" onclick="copyLink()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                        </svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                         Copy Link
                     </button>
                     <button class="btn btn-secondary" onclick="openInApp()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
-                        </svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
                         Open in App
                     </button>
                 </div>
-
-                ${data.title ? `<div class="meta">Title: ${data.title}</div>` : ''}
 
                 <div class="get-app">
                     <h3>Get Instinctly</h3>
@@ -344,39 +607,42 @@
             const content = document.getElementById('content');
             const shareId = getShareId();
             content.innerHTML = `
-                <div class="error">
-                    <div class="error-icon">😕</div>
-                    <h2>Unable to load image</h2>
-                    <p>${message}</p>
-                    ${details ? `<p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">${details}</p>` : ''}
-                    ${shareId ? `<p style="font-size: 11px; opacity: 0.5; margin-top: 5px;">ID: ${shareId}</p>` : ''}
-                    <br>
-                    <p style="font-size: 13px; opacity: 0.8;">The image may have expired or been deleted.</p>
-                    <br>
-                    <a href="https://instinctly.app" class="btn btn-primary">Get Instinctly</a>
+                <div class="content-container">
+                    <div class="error">
+                        <div class="error-icon">😕</div>
+                        <h2>Unable to load content</h2>
+                        <p>${message}</p>
+                        ${details ? `<p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">${details}</p>` : ''}
+                        ${shareId ? `<p style="font-size: 11px; opacity: 0.5; margin-top: 5px;">ID: ${shareId}</p>` : ''}
+                        <br>
+                        <a href="https://instinctly.app" class="btn btn-primary">Get Instinctly</a>
+                    </div>
                 </div>
             `;
         }
 
-        // Download image
-        function downloadImage() {
-            const img = document.getElementById('sharedImage');
-            if (img) {
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function downloadContent() {
+            const media = document.getElementById('sharedMedia');
+            if (media) {
                 const link = document.createElement('a');
-                link.href = img.src;
-                link.download = 'instinctly-shared-image.png';
+                link.href = media.src;
+                link.download = 'instinctly-shared';
                 link.click();
             }
         }
 
-        // Copy link
         function copyLink() {
             navigator.clipboard.writeText(window.location.href).then(() => {
                 alert('Link copied to clipboard!');
             });
         }
 
-        // Open in app
         function openInApp() {
             const shareId = getShareId();
             if (shareId) {
@@ -384,11 +650,9 @@
             }
         }
 
-        // Update status on page
         function updateStatus(msg) {
             const el = document.getElementById('status');
             if (el) el.textContent = msg;
-            console.log('Status:', msg);
         }
 
         // Initialize
@@ -401,31 +665,29 @@
                 return;
             }
 
-            // Check if API token is configured
-            if (CLOUDKIT_CONFIG.apiTokenAuth.apiToken === 'YOUR_API_TOKEN_HERE') {
-                displayError('CloudKit API token not configured', 'See setup instructions in README.md');
-                return;
-            }
-
             try {
                 updateStatus('Connecting to CloudKit...');
-                const data = await fetchSharedImage(shareId);
-                updateStatus('Image data received');
-                if (data.imageAsset && data.imageAsset.downloadURL) {
-                    displayImage(data);
+                const record = await fetchSharedContent(shareId);
+                currentRecord = record;
+
+                // Check for password protection
+                storedPasswordHash = record.fields.passwordHash?.value;
+
+                if (storedPasswordHash) {
+                    updateStatus('Password required');
+                    showPasswordForm();
                 } else {
-                    displayError('Image asset not available', 'The record exists but has no image data');
+                    // Increment view count for non-protected content
+                    incrementViewCount(shareId);
+                    displayContent(record);
                 }
             } catch (error) {
                 console.error('Init error:', error);
-                displayError(
-                    error.message || 'Failed to load the shared image',
-                    'Check browser console for details'
-                );
+                displayError(error.message || 'Failed to load content', 'Check browser console for details');
             }
         }
 
-        // Wait for CloudKit to load, then start
+        // Wait for CloudKit
         let waitAttempts = 0;
         function waitForCloudKit() {
             waitAttempts++;
@@ -435,18 +697,12 @@
                 updateStatus('CloudKit loaded!');
                 init();
             } else if (waitAttempts > 50) {
-                // 5 seconds timeout
-                displayError(
-                    'CloudKit library failed to load',
-                    'The Apple CloudKit JS library could not be loaded. This may be due to ad blockers or network issues.'
-                );
+                displayError('CloudKit library failed to load', 'This may be due to ad blockers or network issues.');
             } else {
-                // CloudKit not loaded yet, wait and retry
                 setTimeout(waitForCloudKit, 100);
             }
         }
 
-        // Start when DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', waitForCloudKit);
         } else {
