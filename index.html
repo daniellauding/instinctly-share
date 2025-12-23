@@ -286,6 +286,76 @@
             color: rgba(255, 255, 255, 0.5);
         }
 
+        /* Profile Header Styles */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 30px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .profile-avatar {
+            flex-shrink: 0;
+        }
+
+        .profile-avatar img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(102, 126, 234, 0.5);
+        }
+
+        .avatar-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        .profile-info h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+
+        .profile-bio {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0 0 8px 0;
+            line-height: 1.5;
+        }
+
+        .profile-website {
+            display: inline-block;
+            color: #a5b4fc;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .profile-website:hover {
+            color: #c4b5fd;
+            text-decoration: underline;
+        }
+
+        .profile-stats {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            margin: 0;
+        }
+
         .actions {
             display: flex;
             justify-content: center;
@@ -749,6 +819,32 @@
             if (el) el.textContent = msg;
         }
 
+        // Fetch user profile
+        let currentProfileUsername = null;
+        let currentProfilePasswordHash = null;
+
+        async function fetchUserProfile(username) {
+            await ensureCloudKitReady();
+
+            const recordID = { recordName: `profile_${username}` };
+
+            try {
+                const response = await publicDB.fetchRecords([recordID]);
+                if (response.records && response.records.length > 0) {
+                    const record = response.records[0];
+                    return {
+                        bio: record.fields.bio?.value || null,
+                        website: record.fields.website?.value || null,
+                        logoURL: record.fields.logoURL?.value || null,
+                        passwordHash: record.fields.passwordHash?.value || null
+                    };
+                }
+            } catch (e) {
+                console.log('No profile found for', username);
+            }
+            return { bio: null, website: null, logoURL: null, passwordHash: null };
+        }
+
         // Fetch public uploads for a user
         async function fetchUserPublicUploads(username) {
             await ensureCloudKitReady();
@@ -771,18 +867,74 @@
             return response.records || [];
         }
 
-        // Display user profile grid
-        function displayProfileGrid(username, records) {
+        // Show profile password form
+        function showProfilePasswordForm(username) {
             const content = document.getElementById('content');
+            content.innerHTML = `
+                <div class="content-container">
+                    <div class="password-form">
+                        <div class="lock-icon">🔐</div>
+                        <h2>Profile Protected</h2>
+                        <p>@${escapeHtml(username)}'s profile is password protected</p>
+                        <input type="password" id="profile-password-input" placeholder="Enter password" autofocus>
+                        <button class="btn btn-primary" onclick="verifyProfilePassword('${escapeHtml(username)}')">Unlock Profile</button>
+                        <p id="profile-password-error" style="color: #ff6b6b; display: none; margin-top: 10px;">Incorrect password</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('profile-password-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') verifyProfilePassword(username);
+            });
+        }
+
+        // Verify profile password
+        async function verifyProfilePassword(username) {
+            const password = document.getElementById('profile-password-input').value;
+            const hash = await hashPassword(password);
+
+            if (hash === currentProfilePasswordHash) {
+                document.getElementById('profile-password-error').style.display = 'none';
+                loadProfileContent(username);
+            } else {
+                document.getElementById('profile-password-error').style.display = 'block';
+                document.getElementById('profile-password-input').value = '';
+                document.getElementById('profile-password-input').focus();
+            }
+        }
+
+        // Load profile content after password verification
+        async function loadProfileContent(username) {
+            const profile = await fetchUserProfile(username);
+            const records = await fetchUserPublicUploads(username);
+            displayProfileGrid(username, records, profile);
+        }
+
+        // Display user profile grid
+        function displayProfileGrid(username, records, profile = {}) {
+            const content = document.getElementById('content');
+            const { bio, website, logoURL } = profile;
+
+            // Build profile header
+            const profileHeader = `
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        ${logoURL
+                            ? `<img src="${escapeHtml(logoURL)}" alt="@${escapeHtml(username)}">`
+                            : `<div class="avatar-placeholder">📷</div>`
+                        }
+                    </div>
+                    <div class="profile-info">
+                        <h1>@${escapeHtml(username)}</h1>
+                        ${bio ? `<p class="profile-bio">${escapeHtml(bio)}</p>` : ''}
+                        ${website ? `<a href="${escapeHtml(website)}" target="_blank" rel="noopener" class="profile-website">🔗 ${escapeHtml(website.replace(/^https?:\/\//, ''))}</a>` : ''}
+                        <p class="profile-stats">${records.length} public upload${records.length !== 1 ? 's' : ''}</p>
+                    </div>
+                </div>
+            `;
 
             if (records.length === 0) {
                 content.innerHTML = `
-                    <div class="header">
-                        <div class="logo">
-                            <div class="logo-icon">📷</div>
-                            <span>@${escapeHtml(username)}</span>
-                        </div>
-                    </div>
+                    ${profileHeader}
                     <div class="content-container">
                         <div class="error">
                             <div class="error-icon">📭</div>
@@ -837,13 +989,7 @@
             });
 
             content.innerHTML = `
-                <div class="header">
-                    <div class="logo">
-                        <div class="logo-icon">📷</div>
-                        <span>@${escapeHtml(username)}</span>
-                    </div>
-                    <p style="opacity: 0.7; margin-top: 8px;">${records.length} public upload${records.length !== 1 ? 's' : ''}</p>
-                </div>
+                ${profileHeader}
                 <div class="profile-grid">
                     ${gridHTML}
                 </div>
@@ -858,9 +1004,21 @@
             // Profile view mode
             if (username) {
                 updateStatus('Loading profile: @' + username);
+                currentProfileUsername = username;
+
                 try {
+                    // First fetch profile to check for password
+                    const profile = await fetchUserProfile(username);
+
+                    if (profile.passwordHash) {
+                        currentProfilePasswordHash = profile.passwordHash;
+                        showProfilePasswordForm(username);
+                        return;
+                    }
+
+                    // No password - load content directly
                     const records = await fetchUserPublicUploads(username);
-                    displayProfileGrid(username, records);
+                    displayProfileGrid(username, records, profile);
                 } catch (error) {
                     console.error('Profile error:', error);
                     displayError('Failed to load profile', error.message);
