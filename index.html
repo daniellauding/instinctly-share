@@ -199,6 +199,93 @@
             margin-top: 8px;
         }
 
+        /* Profile Grid Styles */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .profile-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+
+        .profile-card-thumb {
+            aspect-ratio: 16/10;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-card-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-card-thumb .thumb-icon {
+            font-size: 48px;
+            opacity: 0.8;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .profile-card-info {
+            padding: 16px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
         .actions {
             display: flex;
             justify-content: center;
@@ -357,6 +444,11 @@
         function getShareId() {
             const params = new URLSearchParams(window.location.search);
             return params.get('id') || params.get('share');
+        }
+
+        function getUsername() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('user') || params.get('username');
         }
 
         // SHA-256 hash function (matches Swift implementation)
@@ -657,13 +749,130 @@
             if (el) el.textContent = msg;
         }
 
+        // Fetch public uploads for a user
+        async function fetchUserPublicUploads(username) {
+            await ensureCloudKitReady();
+
+            const query = {
+                recordType: 'SharedImage',
+                filterBy: [
+                    { fieldName: 'username', comparator: 'EQUALS', fieldValue: { value: username } },
+                    { fieldName: 'isPublic', comparator: 'EQUALS', fieldValue: { value: 1 } }
+                ],
+                sortBy: [{ fieldName: 'createdAt', ascending: false }]
+            };
+
+            const response = await publicDB.performQuery(query);
+
+            if (response.hasErrors) {
+                throw new Error('Failed to fetch user uploads');
+            }
+
+            return response.records || [];
+        }
+
+        // Display user profile grid
+        function displayProfileGrid(username, records) {
+            const content = document.getElementById('content');
+
+            if (records.length === 0) {
+                content.innerHTML = `
+                    <div class="header">
+                        <div class="logo">
+                            <div class="logo-icon">📷</div>
+                            <span>@${escapeHtml(username)}</span>
+                        </div>
+                    </div>
+                    <div class="content-container">
+                        <div class="error">
+                            <div class="error-icon">📭</div>
+                            <h2>No public uploads</h2>
+                            <p>This user hasn't shared any public content yet.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let gridHTML = '';
+            records.forEach(record => {
+                const fields = record.fields;
+                const title = fields.title?.value || fields.fileName?.value || 'Untitled';
+                const description = fields.description?.value || '';
+                const mediaType = fields.mediaType?.value || 'image';
+                const asset = fields.imageAsset?.value;
+                const downloadURL = asset?.downloadURL;
+                const recordId = record.recordName;
+                const viewCount = fields.viewCount?.value || 0;
+                const hasPassword = !!fields.passwordHash?.value;
+
+                const typeIcon = {
+                    'image': '🖼️',
+                    'gif': '🎞️',
+                    'video': '🎬',
+                    'audio': '🎵',
+                    'pdf': '📄',
+                    'text': '📝'
+                }[mediaType] || '📁';
+
+                gridHTML += `
+                    <a href="?id=${recordId}" class="profile-card">
+                        <div class="profile-card-thumb">
+                            ${mediaType === 'image' || mediaType === 'gif'
+                                ? `<img src="${downloadURL}" alt="${escapeHtml(title)}" loading="lazy">`
+                                : `<div class="thumb-icon">${typeIcon}</div>`
+                            }
+                            ${hasPassword ? '<div class="card-badge">🔒</div>' : ''}
+                        </div>
+                        <div class="profile-card-info">
+                            <div class="card-title">${escapeHtml(title)}</div>
+                            ${description ? `<div class="card-desc">${escapeHtml(description)}</div>` : ''}
+                            <div class="card-meta">
+                                <span>${typeIcon} ${mediaType}</span>
+                                <span>👁 ${viewCount}</span>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            });
+
+            content.innerHTML = `
+                <div class="header">
+                    <div class="logo">
+                        <div class="logo-icon">📷</div>
+                        <span>@${escapeHtml(username)}</span>
+                    </div>
+                    <p style="opacity: 0.7; margin-top: 8px;">${records.length} public upload${records.length !== 1 ? 's' : ''}</p>
+                </div>
+                <div class="profile-grid">
+                    ${gridHTML}
+                </div>
+            `;
+        }
+
         // Initialize
         async function init() {
             const shareId = getShareId();
+            const username = getUsername();
+
+            // Profile view mode
+            if (username) {
+                updateStatus('Loading profile: @' + username);
+                try {
+                    const records = await fetchUserPublicUploads(username);
+                    displayProfileGrid(username, records);
+                } catch (error) {
+                    console.error('Profile error:', error);
+                    displayError('Failed to load profile', error.message);
+                }
+                return;
+            }
+
+            // Single content view mode
             updateStatus('Share ID: ' + (shareId || 'none'));
 
             if (!shareId) {
-                displayError('No share ID provided', 'Add ?id=YOUR_SHARE_ID to the URL');
+                displayError('No share ID provided', 'Add ?id=YOUR_SHARE_ID or ?user=USERNAME to the URL');
                 return;
             }
 
