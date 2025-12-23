@@ -629,10 +629,12 @@
 
         function downloadContent() {
             const media = document.getElementById('sharedMedia');
-            if (media) {
+            if (media && currentRecord) {
+                const fields = currentRecord.fields;
+                const title = fields.title?.value || fields.fileName?.value || 'instinctly-shared';
                 const link = document.createElement('a');
                 link.href = media.src;
-                link.download = 'instinctly-shared';
+                link.download = title;
                 link.click();
             }
         }
