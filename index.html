@@ -1207,24 +1207,45 @@
             return { name: collectionName, description: null, passwordHash: null, isPublic: false };
         }
 
-        // Fetch collection items
+        // Fetch collection items (using client-side filter since 'collection' field may not be indexed)
         async function fetchCollectionItems(username, collectionName) {
             await ensureCloudKitReady();
+            console.log('📂 Fetching collection items for:', username, collectionName);
 
+            // First try to get user's uploads and filter client-side
+            // (CloudKit may not have 'collection' field indexed for queries)
             const query = {
                 recordType: 'SharedImage',
                 filterBy: [
-                    { fieldName: 'username', comparator: 'EQUALS', fieldValue: { value: username } },
-                    { fieldName: 'collection', comparator: 'EQUALS', fieldValue: { value: collectionName } }
+                    { fieldName: 'username', comparator: 'EQUALS', fieldValue: { value: username } }
                 ],
                 sortBy: [{ fieldName: 'createdAt', ascending: false }]
             };
 
-            const response = await publicDB.performQuery(query);
-            if (response.hasErrors) {
-                throw new Error('Failed to fetch collection items');
+            try {
+                const response = await publicDB.performQuery(query, { resultsLimit: 100 });
+                console.log('📂 User uploads response:', response);
+
+                if (response.hasErrors) {
+                    console.error('❌ Query errors:', response.errors);
+                    throw new Error('Failed to fetch collection items');
+                }
+
+                const allRecords = response.records || [];
+
+                // Filter by collection name client-side
+                const collectionRecords = allRecords.filter(r => {
+                    const recordCollection = r.fields.collection?.value;
+                    console.log('Record collection:', recordCollection, 'looking for:', collectionName);
+                    return recordCollection === collectionName;
+                });
+
+                console.log('📂 Found', collectionRecords.length, 'items in collection');
+                return collectionRecords;
+            } catch (error) {
+                console.error('❌ Collection fetch error:', error);
+                throw error;
             }
-            return response.records || [];
         }
 
         // Show collection password form
