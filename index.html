@@ -64,13 +64,22 @@
         }
 
         .shared-image, .shared-video {
-            width: 100%;
+            max-width: 100%;
             max-height: 75vh;
             border-radius: 8px;
             display: block;
             margin: 0 auto;
             object-fit: contain;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Ensure content container centers media */
+        .content-container .shared-image,
+        .content-container .shared-video {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 75vh;
         }
 
         .shared-audio {
