@@ -350,6 +350,11 @@
             text-decoration: underline;
         }
 
+        .profile-link:hover {
+            color: #c4b5fd;
+            text-decoration: underline;
+        }
+
         .profile-stats {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.5);
@@ -551,6 +556,13 @@
             });
         }
 
+        // Ensure CloudKit is ready
+        async function ensureCloudKitReady() {
+            if (!publicDB) {
+                await initCloudKit();
+            }
+        }
+
         // Fetch shared content
         async function fetchSharedContent(shareId) {
             const db = await initCloudKit();
@@ -645,9 +657,12 @@
             const fields = record.fields;
 
             const title = fields.title?.value || fields.fileName?.value || 'Shared Content';
+            const description = fields.description?.value || '';
             const mediaType = fields.mediaType?.value || 'image';
             const viewCount = fields.viewCount?.value || 0;
             const collection = fields.collection?.value;
+            const username = fields.username?.value || '';
+            const isPublic = (fields.isPublic?.value || 0) === 1;
             const asset = fields.imageAsset?.value;
             const downloadURL = asset?.downloadURL;
 
@@ -739,7 +754,9 @@
                     <div class="meta-bar">
                         <div>
                             <div class="meta-title">${escapeHtml(title)}</div>
+                            ${description ? `<div class="meta-description" style="font-size: 14px; color: rgba(255,255,255,0.7); margin-top: 4px;">${escapeHtml(description)}</div>` : ''}
                             ${collection ? `<div class="collection-badge">📁 ${escapeHtml(collection)}</div>` : ''}
+                            ${username && isPublic ? `<a href="?user=${escapeHtml(username)}" class="profile-link" style="display: inline-flex; align-items: center; gap: 4px; color: #a5b4fc; text-decoration: none; font-size: 13px; margin-top: 6px;">👤 @${escapeHtml(username)}</a>` : ''}
                         </div>
                         <div class="meta-info">
                             <span>👁 ${viewCount} views</span>
