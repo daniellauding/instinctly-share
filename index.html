@@ -64,11 +64,12 @@
         }
 
         .shared-image, .shared-video {
-            max-width: 100%;
-            max-height: 70vh;
+            width: 100%;
+            max-height: 75vh;
             border-radius: 8px;
             display: block;
             margin: 0 auto;
+            object-fit: contain;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
@@ -732,12 +733,18 @@
 
         // Increment view count
         async function incrementViewCount(shareId) {
+            console.log('📊 Incrementing view count for:', shareId);
             try {
+                await ensureCloudKitReady();
+
                 // Fetch current record
                 const response = await publicDB.fetchRecords([shareId]);
+                console.log('📊 Fetch response:', response);
+
                 if (response.records && response.records.length > 0) {
                     const record = response.records[0];
                     const currentCount = record.fields.viewCount?.value || 0;
+                    console.log('📊 Current count:', currentCount, 'incrementing to:', currentCount + 1);
 
                     // Update with incremented count
                     const operations = [{
@@ -1257,27 +1264,45 @@
 
         // Fetch all public uploads (most recent)
         async function fetchPublicUploads(limit = 20) {
+            console.log('🔍 Fetching public uploads...');
             await ensureCloudKitReady();
 
+            // Try without filter first to see all records
             const query = {
                 recordType: 'SharedImage',
-                filterBy: [
-                    { fieldName: 'isPublic', comparator: 'EQUALS', fieldValue: { value: 1 } }
-                ],
                 sortBy: [{ fieldName: 'createdAt', ascending: false }]
             };
 
-            const response = await publicDB.performQuery(query, { resultsLimit: limit });
+            try {
+                const response = await publicDB.performQuery(query, { resultsLimit: limit });
+                console.log('📦 All uploads response:', response);
 
-            if (response.hasErrors) {
-                throw new Error('Failed to fetch public uploads');
+                if (response.hasErrors) {
+                    console.error('❌ Query errors:', response.errors);
+                    return [];
+                }
+
+                const allRecords = response.records || [];
+                console.log('📦 Total records found:', allRecords.length);
+
+                // Filter to public ones client-side (more reliable)
+                const publicRecords = allRecords.filter(r => {
+                    const isPublic = r.fields.isPublic?.value;
+                    console.log('Record', r.recordName, 'isPublic:', isPublic);
+                    return isPublic === 1 || isPublic === true;
+                });
+
+                console.log('📦 Public records:', publicRecords.length);
+                return publicRecords;
+            } catch (error) {
+                console.error('❌ Fetch error:', error);
+                return [];
             }
-
-            return response.records || [];
         }
 
         // Fetch all public profiles
         async function fetchPublicProfiles(limit = 10) {
+            console.log('🔍 Fetching public profiles...');
             await ensureCloudKitReady();
 
             const query = {
@@ -1285,14 +1310,23 @@
                 sortBy: [{ fieldName: 'username', ascending: true }]
             };
 
-            const response = await publicDB.performQuery(query, { resultsLimit: limit });
+            try {
+                const response = await publicDB.performQuery(query, { resultsLimit: limit });
+                console.log('👤 Profiles response:', response);
 
-            if (response.hasErrors) {
+                if (response.hasErrors) {
+                    console.error('❌ Profile query errors:', response.errors);
+                    return [];
+                }
+
+                // Filter out password-protected profiles for discovery
+                const profiles = (response.records || []).filter(r => !r.fields.passwordHash?.value);
+                console.log('👤 Public profiles:', profiles.length);
+                return profiles;
+            } catch (error) {
+                console.error('❌ Profile fetch error:', error);
                 return [];
             }
-
-            // Filter out password-protected profiles for discovery
-            return (response.records || []).filter(r => !r.fields.passwordHash?.value);
         }
 
         // Show discovery page
