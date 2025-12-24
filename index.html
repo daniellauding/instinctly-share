@@ -355,6 +355,153 @@
             text-decoration: underline;
         }
 
+        /* Discovery Page Styles */
+        .discovery-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .discovery-welcome {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .discovery-welcome h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #a5b4fc, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .discovery-welcome p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+        }
+
+        .discovery-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .discovery-features .feature {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .discovery-welcome-mini {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+        }
+
+        .discovery-welcome-mini h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .discovery-welcome-mini p {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .discovery-section {
+            margin-bottom: 40px;
+        }
+
+        .discovery-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .discovery-profiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .discovery-profile-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+        }
+
+        .discovery-profile-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .discovery-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .discovery-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            font-size: 20px;
+        }
+
+        .discovery-profile-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .discovery-username {
+            font-weight: 600;
+            color: #a5b4fc;
+        }
+
+        .discovery-bio {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-username {
+            font-size: 12px;
+            color: #a5b4fc;
+            margin-top: 2px;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
         .profile-stats {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.5);
@@ -1106,6 +1253,183 @@
             displayCollectionGrid(username, collectionName, records, collection);
         }
 
+        // MARK: - Discovery Page Functions
+
+        // Fetch all public uploads (most recent)
+        async function fetchPublicUploads(limit = 20) {
+            await ensureCloudKitReady();
+
+            const query = {
+                recordType: 'SharedImage',
+                filterBy: [
+                    { fieldName: 'isPublic', comparator: 'EQUALS', fieldValue: { value: 1 } }
+                ],
+                sortBy: [{ fieldName: 'createdAt', ascending: false }]
+            };
+
+            const response = await publicDB.performQuery(query, { resultsLimit: limit });
+
+            if (response.hasErrors) {
+                throw new Error('Failed to fetch public uploads');
+            }
+
+            return response.records || [];
+        }
+
+        // Fetch all public profiles
+        async function fetchPublicProfiles(limit = 10) {
+            await ensureCloudKitReady();
+
+            const query = {
+                recordType: 'UserProfile',
+                sortBy: [{ fieldName: 'username', ascending: true }]
+            };
+
+            const response = await publicDB.performQuery(query, { resultsLimit: limit });
+
+            if (response.hasErrors) {
+                return [];
+            }
+
+            // Filter out password-protected profiles for discovery
+            return (response.records || []).filter(r => !r.fields.passwordHash?.value);
+        }
+
+        // Show discovery page
+        async function showDiscoveryPage() {
+            updateStatus('Loading public content...');
+
+            try {
+                const [uploads, profiles] = await Promise.all([
+                    fetchPublicUploads(12),
+                    fetchPublicProfiles(6)
+                ]);
+
+                displayDiscoveryPage(uploads, profiles);
+            } catch (error) {
+                console.error('Discovery error:', error);
+                displayDiscoveryPage([], []);
+            }
+        }
+
+        // Display discovery page
+        function displayDiscoveryPage(uploads, profiles) {
+            const content = document.getElementById('content');
+
+            // Build profiles section
+            let profilesHTML = '';
+            if (profiles.length > 0) {
+                profilesHTML = `
+                    <div class="discovery-section">
+                        <h2>👤 Public Profiles</h2>
+                        <div class="discovery-profiles">
+                            ${profiles.map(p => {
+                                const username = p.recordName.replace('profile_', '');
+                                const bio = p.fields.bio?.value || '';
+                                const logoURL = p.fields.logoURL?.value;
+                                return `
+                                    <a href="?user=${escapeHtml(username)}" class="discovery-profile-card">
+                                        <div class="discovery-avatar">
+                                            ${logoURL
+                                                ? `<img src="${escapeHtml(logoURL)}" alt="@${escapeHtml(username)}">`
+                                                : `<div class="avatar-placeholder">📷</div>`
+                                            }
+                                        </div>
+                                        <div class="discovery-profile-info">
+                                            <div class="discovery-username">@${escapeHtml(username)}</div>
+                                            ${bio ? `<div class="discovery-bio">${escapeHtml(bio)}</div>` : ''}
+                                        </div>
+                                    </a>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Build uploads section
+            let uploadsHTML = '';
+            if (uploads.length > 0) {
+                uploadsHTML = `
+                    <div class="discovery-section">
+                        <h2>🖼️ Recent Public Uploads</h2>
+                        <div class="profile-grid">
+                            ${uploads.map(record => {
+                                const fields = record.fields;
+                                const title = fields.title?.value || fields.fileName?.value || 'Untitled';
+                                const description = fields.description?.value || '';
+                                const mediaType = fields.mediaType?.value || 'image';
+                                const asset = fields.imageAsset?.value;
+                                const downloadURL = asset?.downloadURL;
+                                const recordId = record.recordName;
+                                const viewCount = fields.viewCount?.value || 0;
+                                const username = fields.username?.value || '';
+                                const hasPassword = !!fields.passwordHash?.value;
+
+                                const typeIcon = {
+                                    'image': '🖼️', 'gif': '🎞️', 'video': '🎬',
+                                    'audio': '🎵', 'pdf': '📄', 'text': '📝'
+                                }[mediaType] || '📁';
+
+                                return `
+                                    <a href="?id=${recordId}" class="profile-card">
+                                        <div class="profile-card-thumb">
+                                            ${mediaType === 'image' || mediaType === 'gif'
+                                                ? `<img src="${downloadURL}" alt="${escapeHtml(title)}" loading="lazy">`
+                                                : `<div class="thumb-icon">${typeIcon}</div>`
+                                            }
+                                            ${hasPassword ? '<div class="card-badge">🔒</div>' : ''}
+                                        </div>
+                                        <div class="profile-card-info">
+                                            <div class="card-title">${escapeHtml(title)}</div>
+                                            ${username ? `<div class="card-username">by @${escapeHtml(username)}</div>` : ''}
+                                            <div class="card-meta">
+                                                <span>${typeIcon} ${mediaType}</span>
+                                                <span>👁 ${viewCount}</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Empty state
+            if (uploads.length === 0 && profiles.length === 0) {
+                content.innerHTML = `
+                    <div class="content-container">
+                        <div class="discovery-welcome">
+                            <h1>Welcome to Instinctly</h1>
+                            <p>A minimalist screenshot & annotation tool for macOS</p>
+                            <div class="discovery-features">
+                                <div class="feature">📸 Capture screenshots & recordings</div>
+                                <div class="feature">✏️ Annotate with arrows, shapes & text</div>
+                                <div class="feature">☁️ Share instantly via link</div>
+                                <div class="feature">👤 Create your public profile</div>
+                            </div>
+                            <a href="https://instinctly.app" class="btn btn-primary" style="margin-top: 20px;">
+                                Download Instinctly for macOS
+                            </a>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            content.innerHTML = `
+                <div class="discovery-container">
+                    <div class="discovery-welcome-mini">
+                        <h1>Discover on Instinctly</h1>
+                        <p>Browse public profiles and shared content</p>
+                    </div>
+                    ${profilesHTML}
+                    ${uploadsHTML}
+                </div>
+            `;
+        }
+
         // Display collection grid
         function displayCollectionGrid(username, collectionName, records, collection = {}) {
             const content = document.getElementById('content');
@@ -1240,7 +1564,8 @@
             updateStatus('Share ID: ' + (shareId || 'none'));
 
             if (!shareId) {
-                displayError('No share ID provided', 'Add ?id=YOUR_SHARE_ID or ?user=USERNAME or ?user=X&collection=Y to the URL');
+                // Show discovery page with public content
+                await showDiscoveryPage();
                 return;
             }
 
