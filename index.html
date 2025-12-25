@@ -1334,6 +1334,22 @@
                     `;
                     break;
 
+                case 'archive':
+                    mediaHTML = `
+                        <div class="audio-container">
+                            <div class="audio-icon">📦</div>
+                            <h3>${title}</h3>
+                            <p style="color: rgba(255,255,255,0.6);">Archive file - click download to extract</p>
+                        </div>
+                    `;
+                    actionsHTML = `
+                        <a href="${downloadURL}" download="${title}" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Download Archive
+                        </a>
+                    `;
+                    break;
+
                 default:
                     mediaHTML = `
                         <div class="audio-container">
@@ -1901,7 +1917,8 @@
                     'audio': '🎵',
                     'pdf': '📄',
                     'text': '📝',
-                    'markdown': '📑'
+                    'markdown': '📑',
+                    'archive': '📦'
                 }[mediaType] || '📁';
 
                 gridHTML += `
@@ -2184,7 +2201,7 @@
 
                                 const typeIcon = {
                                     'image': '🖼️', 'gif': '🎞️', 'video': '🎬',
-                                    'audio': '🎵', 'pdf': '📄', 'text': '📝', 'markdown': '📑'
+                                    'audio': '🎵', 'pdf': '📄', 'text': '📝', 'markdown': '📑', 'archive': '📦'
                                 }[mediaType] || '📁';
 
                                 return `
@@ -2341,7 +2358,7 @@
 
                 const typeIcon = {
                     'image': '🖼️', 'gif': '🎞️', 'video': '🎬',
-                    'audio': '🎵', 'pdf': '📄', 'text': '📝', 'markdown': '📑'
+                    'audio': '🎵', 'pdf': '📄', 'text': '📝', 'markdown': '📑', 'archive': '📦'
                 }[mediaType] || '📁';
 
                 gridHTML += `
