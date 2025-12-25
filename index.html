@@ -27,6 +27,7 @@
             max-width: 1200px;
             width: 90%;
             padding: 20px;
+            text-align: center;
         }
 
         .header {
@@ -57,15 +58,18 @@
         .content-container {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
-            padding: 20px;
+            padding: 16px;
+            padding-bottom: 8px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             margin-bottom: 20px;
+            display: inline-block;
+            max-width: 100%;
         }
 
         .shared-image, .shared-video {
             max-width: 100%;
-            max-height: 75vh;
+            max-height: 80vh;
             border-radius: 8px;
             display: block;
             margin: 0 auto;
@@ -73,13 +77,13 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
-        /* Ensure content container centers media */
+        /* Ensure content container centers media - remove explicit width/height to let image dictate size */
         .content-container .shared-image,
         .content-container .shared-video {
             width: auto;
             height: auto;
-            max-width: 100%;
-            max-height: 75vh;
+            max-width: calc(100vw - 80px);
+            max-height: 80vh;
         }
 
         .shared-audio {
@@ -177,6 +181,7 @@
             margin-bottom: 16px;
             padding-bottom: 16px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
         }
 
         .meta-title {
@@ -613,11 +618,114 @@
             line-height: 1.5;
         }
 
+        .pdf-container {
+            width: 100%;
+            min-height: 70vh;
+        }
+
         .pdf-frame {
             width: 100%;
             height: 70vh;
             border: none;
             border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .pdf-fallback {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .pdf-fallback a {
+            color: #667eea;
+        }
+
+        /* Markdown preview */
+        .markdown-preview {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 24px 32px;
+            max-height: 70vh;
+            overflow-y: auto;
+            text-align: left;
+            line-height: 1.7;
+        }
+
+        .markdown-preview h1 {
+            font-size: 2em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 0.3em;
+            margin: 1em 0 0.5em 0;
+        }
+
+        .markdown-preview h2 {
+            font-size: 1.5em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.3em;
+            margin: 1em 0 0.5em 0;
+        }
+
+        .markdown-preview h3 {
+            font-size: 1.25em;
+            margin: 1em 0 0.5em 0;
+        }
+
+        .markdown-preview p {
+            margin: 0.8em 0;
+        }
+
+        .markdown-preview code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-preview pre {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+
+        .markdown-preview pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-preview ul, .markdown-preview ol {
+            padding-left: 2em;
+            margin: 0.8em 0;
+        }
+
+        .markdown-preview li {
+            margin: 0.4em 0;
+        }
+
+        .markdown-preview blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 16px;
+            margin: 1em 0;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+        }
+
+        .markdown-preview a {
+            color: #a5b4fc;
+            text-decoration: none;
+        }
+
+        .markdown-preview a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-preview hr {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 1.5em 0;
         }
 
         .audio-container {
@@ -628,6 +736,231 @@
         .audio-icon {
             font-size: 80px;
             margin-bottom: 20px;
+        }
+
+        /* Comments Section */
+        .comments-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .comments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .comments-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .comments-count {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .comment-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comment-form input,
+        .comment-form textarea {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .comment-form input:focus,
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .comment-form textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .comment-form-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .comment-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .comment-author {
+            font-size: 13px;
+            font-weight: 600;
+            color: #a5b4fc;
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .comment-time {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 6px;
+        }
+
+        .comments-disabled {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .no-comments {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .comment-error {
+            text-align: center;
+            padding: 20px;
+            color: #ff6b6b;
+            font-size: 14px;
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 20px;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .upload-zone-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-zone h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .upload-zone p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .upload-zone .supported-types {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+
+        .upload-progress {
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .upload-status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .upload-result {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .upload-result a {
+            color: #667eea;
+            word-break: break-all;
+        }
+
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+            justify-content: center;
+        }
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-item .remove-file {
+            cursor: pointer;
+            opacity: 0.6;
+        }
+
+        .file-item .remove-file:hover {
+            opacity: 1;
         }
     </style>
 </head>
@@ -826,8 +1159,10 @@
             const collection = fields.collection?.value;
             const username = fields.username?.value || '';
             const isPublic = (fields.isPublic?.value || 0) === 1;
+            const allowComments = (fields.allowComments?.value ?? 1) === 1; // Default to true for old records
             const asset = fields.imageAsset?.value;
             const downloadURL = asset?.downloadURL;
+            const shareId = record.recordName;
 
             let mediaHTML = '';
             let actionsHTML = '';
@@ -871,11 +1206,43 @@
                     break;
 
                 case 'pdf':
-                    mediaHTML = `<iframe src="${downloadURL}" class="pdf-frame"></iframe>`;
+                    // Try native PDF embed first, with fallback options
+                    mediaHTML = `
+                        <div class="pdf-container">
+                            <object data="${downloadURL}" type="application/pdf" class="pdf-frame" id="pdfViewer">
+                                <iframe src="${downloadURL}" class="pdf-frame">
+                                    <p class="pdf-fallback">
+                                        Your browser doesn't support PDF preview.
+                                        <a href="${downloadURL}" target="_blank">Open PDF in new tab</a>
+                                    </p>
+                                </iframe>
+                            </object>
+                        </div>
+                    `;
+                    actionsHTML = `
+                        <a href="${downloadURL}" target="_blank" class="btn btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+                            Open in New Tab
+                        </a>
+                        <a href="${downloadURL}" download="${title}.pdf" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Download PDF
+                        </a>
+                    `;
+                    break;
+
+                case 'markdown':
+                    // Fetch and render markdown content
+                    mediaHTML = `<div class="markdown-preview" id="markdownPreview"><p>Loading markdown...</p></div>`;
+                    fetch(downloadURL)
+                        .then(r => r.text())
+                        .then(text => {
+                            document.getElementById('markdownPreview').innerHTML = renderMarkdown(text);
+                        });
                     actionsHTML = `
                         <a href="${downloadURL}" download="${title}" class="btn btn-primary">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                            Download PDF
+                            Download Markdown
                         </a>
                     `;
                     break;
@@ -941,12 +1308,36 @@
                     </button>
                 </div>
 
+                ${allowComments ? `
+                <div class="comments-section" id="commentsSection">
+                    <div class="comments-header">
+                        <h3>💬 Comments</h3>
+                        <span class="comments-count" id="commentsCount">Loading...</span>
+                    </div>
+                    <div class="comment-form">
+                        <input type="text" id="commentAuthor" placeholder="Your name (optional)" maxlength="50">
+                        <textarea id="commentText" placeholder="Leave a comment..." maxlength="500"></textarea>
+                        <div class="comment-form-actions">
+                            <button class="btn btn-primary" onclick="submitComment('${shareId}')">Post Comment</button>
+                        </div>
+                    </div>
+                    <div class="comment-list" id="commentList">
+                        <div class="no-comments">Loading comments...</div>
+                    </div>
+                </div>
+                ` : ''}
+
                 <div class="get-app">
                     <h3>Get Instinctly</h3>
                     <p>Capture, annotate, and share screenshots with ease</p>
                     <a href="https://instinctly.app" class="btn btn-primary">Download for macOS</a>
                 </div>
             `;
+
+            // Load comments if enabled
+            if (allowComments) {
+                loadComments(shareId);
+            }
         }
 
         // Display error
@@ -974,6 +1365,64 @@
             return div.innerHTML;
         }
 
+        // Simple markdown renderer
+        function renderMarkdown(text) {
+            let html = escapeHtml(text);
+
+            // Code blocks (must be first to protect content)
+            html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+
+            // Headers
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+            // Bold and italic
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+            html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+            // Inline code
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            // Links
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+            // Blockquotes
+            html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+            // Horizontal rules
+            html = html.replace(/^---$/gm, '<hr>');
+            html = html.replace(/^\*\*\*$/gm, '<hr>');
+
+            // Unordered lists
+            html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+            // Ordered lists
+            html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+            // Paragraphs (double newlines)
+            html = html.replace(/\n\n/g, '</p><p>');
+            html = '<p>' + html + '</p>';
+
+            // Clean up empty paragraphs
+            html = html.replace(/<p><\/p>/g, '');
+            html = html.replace(/<p>(<h[123]>)/g, '$1');
+            html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
+            html = html.replace(/<p>(<ul>)/g, '$1');
+            html = html.replace(/(<\/ul>)<\/p>/g, '$1');
+            html = html.replace(/<p>(<pre>)/g, '$1');
+            html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+            html = html.replace(/<p>(<blockquote>)/g, '$1');
+            html = html.replace(/(<\/blockquote>)<\/p>/g, '$1');
+            html = html.replace(/<p>(<hr>)/g, '$1');
+            html = html.replace(/(<hr>)<\/p>/g, '$1');
+
+            return html;
+        }
+
         function downloadContent() {
             const media = document.getElementById('sharedMedia');
             if (media && currentRecord) {
@@ -997,6 +1446,131 @@
             if (shareId) {
                 window.location.href = `instinctly://share/${shareId}`;
             }
+        }
+
+        // Comment Functions
+        async function loadComments(shareId) {
+            const commentsContainer = document.getElementById('commentList');
+            if (!commentsContainer) return;
+
+            try {
+                await ensureCloudKitReady();
+
+                const query = {
+                    recordType: 'Comment',
+                    filterBy: [
+                        { fieldName: 'shareId', comparator: 'EQUALS', fieldValue: { value: shareId } }
+                    ],
+                    sortBy: [{ fieldName: 'createdAt', ascending: false }]
+                };
+
+                const response = await publicDB.performQuery(query);
+
+                if (response.hasErrors) {
+                    console.error('Failed to load comments:', response.errors);
+                    commentsContainer.innerHTML = '<p class="comment-error">Failed to load comments</p>';
+                    return;
+                }
+
+                const comments = response.records || [];
+
+                // Update comment count
+                const countEl = document.getElementById('commentsCount');
+                if (countEl) {
+                    countEl.textContent = `${comments.length} comment${comments.length !== 1 ? 's' : ''}`;
+                }
+
+                if (comments.length === 0) {
+                    commentsContainer.innerHTML = '<p class="no-comments">No comments yet. Be the first to comment!</p>';
+                    return;
+                }
+
+                commentsContainer.innerHTML = comments.map(comment => {
+                    const fields = comment.fields;
+                    const author = fields.author?.value || 'Anonymous';
+                    const text = fields.text?.value || '';
+                    const createdAt = fields.createdAt?.value ? new Date(fields.createdAt.value) : new Date();
+                    const timeAgo = formatTimeAgo(createdAt);
+
+                    return `
+                        <div class="comment-item">
+                            <div class="comment-author">${escapeHtml(author)}</div>
+                            <div class="comment-text">${escapeHtml(text)}</div>
+                            <div class="comment-time">${timeAgo}</div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading comments:', error);
+                commentsContainer.innerHTML = '<p class="comment-error">Failed to load comments</p>';
+            }
+        }
+
+        async function submitComment(shareId) {
+            const authorInput = document.getElementById('commentAuthor');
+            const textInput = document.getElementById('commentText');
+            const submitBtn = document.querySelector('.comment-form .btn-primary');
+
+            if (!authorInput || !textInput) return;
+
+            const author = authorInput.value.trim() || 'Anonymous';
+            const text = textInput.value.trim();
+
+            if (!text) {
+                alert('Please enter a comment');
+                return;
+            }
+
+            // Disable form while submitting
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Posting...';
+
+            try {
+                await ensureCloudKitReady();
+
+                const record = {
+                    recordType: 'Comment',
+                    fields: {
+                        shareId: { value: shareId },
+                        author: { value: author },
+                        text: { value: text },
+                        createdAt: { value: Date.now() }
+                    }
+                };
+
+                const response = await publicDB.saveRecords([record]);
+
+                if (response.hasErrors) {
+                    throw new Error('Failed to save comment');
+                }
+
+                // Clear form and reload comments
+                textInput.value = '';
+                await loadComments(shareId);
+
+            } catch (error) {
+                console.error('Error submitting comment:', error);
+                alert('Failed to post comment. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Post Comment';
+            }
+        }
+
+        function formatTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSecs = Math.floor(diffMs / 1000);
+            const diffMins = Math.floor(diffSecs / 60);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffSecs < 60) return 'just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return date.toLocaleDateString();
         }
 
         function updateStatus(msg) {
@@ -1149,7 +1723,8 @@
                     'video': '🎬',
                     'audio': '🎵',
                     'pdf': '📄',
-                    'text': '📝'
+                    'text': '📝',
+                    'markdown': '📑'
                 }[mediaType] || '📁';
 
                 gridHTML += `
@@ -1432,7 +2007,7 @@
 
                                 const typeIcon = {
                                     'image': '🖼️', 'gif': '🎞️', 'video': '🎬',
-                                    'audio': '🎵', 'pdf': '📄', 'text': '📝'
+                                    'audio': '🎵', 'pdf': '📄', 'text': '📝', 'markdown': '📑'
                                 }[mediaType] || '📁';
 
                                 return `
@@ -1460,13 +2035,36 @@
                 `;
             }
 
-            // Empty state
+            // Empty state (still show upload zone)
             if (uploads.length === 0 && profiles.length === 0) {
                 content.innerHTML = `
                     <div class="content-container">
                         <div class="discovery-welcome">
                             <h1>Welcome to Instinctly</h1>
                             <p>A minimalist screenshot & annotation tool for macOS</p>
+
+                            <!-- Upload Toggle Button -->
+                            <button class="btn btn-secondary" onclick="toggleUploadZone()" style="margin: 20px 0;" id="uploadToggleBtn">
+                                📤 Quick Share a File
+                            </button>
+
+                            <!-- Upload Zone (hidden by default) -->
+                            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" style="margin: 20px 0; display: none;">
+                                <input type="file" id="fileInput" multiple accept="image/*,video/*,audio/*,.pdf,.md,.txt,.json,.js,.ts,.py,.swift,.go,.rs,.zip,.rar,.7z">
+                                <div class="upload-zone-icon">📤</div>
+                                <h3>Drop files here or click to upload</h3>
+                                <p>Share images, videos, audio, documents & more</p>
+                                <div class="supported-types">
+                                    Supports: JPG, PNG, GIF, MP4, MOV, MP3, WAV, PDF, MD, TXT, ZIP, RAR & code files
+                                </div>
+                                <div class="file-list" id="fileList"></div>
+                                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                                    <div class="progress-bar"><div class="progress-bar-fill" id="progressFill" style="width: 0%"></div></div>
+                                    <div class="upload-status" id="uploadStatus">Preparing upload...</div>
+                                </div>
+                                <div class="upload-result" id="uploadResult" style="display: none;"></div>
+                            </div>
+
                             <div class="discovery-features">
                                 <div class="feature">📸 Capture screenshots & recordings</div>
                                 <div class="feature">✏️ Annotate with arrows, shapes & text</div>
@@ -1479,6 +2077,7 @@
                         </div>
                     </div>
                 `;
+                initUploadZone();
                 return;
             }
 
@@ -1488,10 +2087,34 @@
                         <h1>Discover on Instinctly</h1>
                         <p>Browse public profiles and shared content</p>
                     </div>
+
+                    <!-- Upload Toggle Button -->
+                    <button class="btn btn-secondary" onclick="toggleUploadZone()" style="margin-bottom: 20px;" id="uploadToggleBtn">
+                        📤 Quick Share a File
+                    </button>
+
+                    <!-- Upload Zone (hidden by default) -->
+                    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" style="display: none;">
+                        <input type="file" id="fileInput" multiple accept="image/*,video/*,audio/*,.pdf,.md,.txt,.json,.js,.ts,.py,.swift,.go,.rs,.zip,.rar,.7z">
+                        <div class="upload-zone-icon">📤</div>
+                        <h3>Drop files here or click to upload</h3>
+                        <p>Share images, videos, audio, documents & more</p>
+                        <div class="supported-types">
+                            Supports: JPG, PNG, GIF, MP4, MOV, MP3, WAV, PDF, MD, TXT, ZIP, RAR & code files
+                        </div>
+                        <div class="file-list" id="fileList"></div>
+                        <div class="upload-progress" id="uploadProgress" style="display: none;">
+                            <div class="progress-bar"><div class="progress-bar-fill" id="progressFill" style="width: 0%"></div></div>
+                            <div class="upload-status" id="uploadStatus">Preparing upload...</div>
+                        </div>
+                        <div class="upload-result" id="uploadResult" style="display: none;"></div>
+                    </div>
+
                     ${profilesHTML}
                     ${uploadsHTML}
                 </div>
             `;
+            initUploadZone();
         }
 
         // Display collection grid
@@ -1541,7 +2164,7 @@
 
                 const typeIcon = {
                     'image': '🖼️', 'gif': '🎞️', 'video': '🎬',
-                    'audio': '🎵', 'pdf': '📄', 'text': '📝'
+                    'audio': '🎵', 'pdf': '📄', 'text': '📝', 'markdown': '📑'
                 }[mediaType] || '📁';
 
                 gridHTML += `
@@ -1571,6 +2194,212 @@
                     ${gridHTML}
                 </div>
             `;
+        }
+
+        // Upload Zone Functions
+        let selectedFiles = [];
+        let uploadZoneVisible = false;
+
+        function toggleUploadZone() {
+            const zone = document.getElementById('uploadZone');
+            const btn = document.getElementById('uploadToggleBtn');
+            if (!zone) return;
+
+            uploadZoneVisible = !uploadZoneVisible;
+            zone.style.display = uploadZoneVisible ? 'block' : 'none';
+            if (btn) {
+                btn.textContent = uploadZoneVisible ? '✕ Close Upload' : '📤 Quick Share a File';
+            }
+            if (uploadZoneVisible) {
+                initUploadZone();
+            }
+        }
+
+        function initUploadZone() {
+            const zone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+            if (!zone || !fileInput) return;
+
+            // Prevent click propagation from file input
+            fileInput.addEventListener('click', (e) => e.stopPropagation());
+
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+
+            // Drag & drop events
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+        }
+
+        function handleFiles(files) {
+            if (!files || files.length === 0) return;
+
+            selectedFiles = Array.from(files);
+            displaySelectedFiles();
+
+            // Auto-upload after short delay
+            setTimeout(() => uploadFiles(), 500);
+        }
+
+        function displaySelectedFiles() {
+            const list = document.getElementById('fileList');
+            if (!list) return;
+
+            list.innerHTML = selectedFiles.map((file, i) => `
+                <div class="file-item">
+                    <span>${getFileIcon(file.type)} ${escapeHtml(file.name)}</span>
+                    <span class="remove-file" onclick="removeFile(${i}); event.stopPropagation();">✕</span>
+                </div>
+            `).join('');
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            displaySelectedFiles();
+        }
+
+        function getFileIcon(mimeType) {
+            if (mimeType.startsWith('image/')) return '🖼️';
+            if (mimeType.startsWith('video/')) return '🎬';
+            if (mimeType.startsWith('audio/')) return '🎵';
+            if (mimeType === 'application/pdf') return '📄';
+            if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z')) return '📦';
+            if (mimeType.includes('text') || mimeType.includes('json')) return '📝';
+            return '📁';
+        }
+
+        function getMediaType(file) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            const mimeType = file.type;
+
+            if (mimeType.startsWith('image/gif') || ext === 'gif') return 'gif';
+            if (mimeType.startsWith('image/')) return 'image';
+            if (mimeType.startsWith('video/')) return 'video';
+            if (mimeType.startsWith('audio/')) return 'audio';
+            if (mimeType === 'application/pdf' || ext === 'pdf') return 'pdf';
+            if (['md', 'markdown'].includes(ext)) return 'markdown';
+            if (['txt', 'json', 'js', 'ts', 'py', 'swift', 'go', 'rs', 'html', 'css', 'xml'].includes(ext)) return 'text';
+            if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return 'archive';
+            return 'file';
+        }
+
+        async function uploadFiles() {
+            if (selectedFiles.length === 0) return;
+
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            const statusEl = document.getElementById('uploadStatus');
+            const resultDiv = document.getElementById('uploadResult');
+
+            progressDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+
+            try {
+                await ensureCloudKitReady();
+
+                const results = [];
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    const progress = ((i / selectedFiles.length) * 100).toFixed(0);
+                    progressFill.style.width = progress + '%';
+                    statusEl.textContent = `Uploading ${file.name} (${i + 1}/${selectedFiles.length})...`;
+
+                    const url = await uploadSingleFile(file);
+                    results.push({ name: file.name, url });
+                }
+
+                progressFill.style.width = '100%';
+                statusEl.textContent = 'Upload complete!';
+
+                // Show results
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <h4>✅ Uploaded ${results.length} file${results.length > 1 ? 's' : ''}</h4>
+                    ${results.map(r => `
+                        <div style="margin: 10px 0;">
+                            <strong>${escapeHtml(r.name)}</strong><br>
+                            <a href="${r.url}" target="_blank">${r.url}</a>
+                            <button class="btn btn-secondary" style="margin-left: 10px; padding: 4px 8px; font-size: 12px;" onclick="navigator.clipboard.writeText('${r.url}'); this.textContent='Copied!'">Copy</button>
+                        </div>
+                    `).join('')}
+                `;
+
+                selectedFiles = [];
+                document.getElementById('fileList').innerHTML = '';
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                statusEl.textContent = 'Upload failed: ' + error.message;
+                progressFill.style.width = '0%';
+            }
+        }
+
+        async function uploadSingleFile(file) {
+            const mediaType = getMediaType(file);
+            const recordId = crypto.randomUUID().toUpperCase();
+
+            // Read file as base64
+            const base64Data = await readFileAsBase64(file);
+
+            // Create CloudKit record
+            const record = {
+                recordType: 'SharedImage',
+                recordName: recordId,
+                fields: {
+                    title: { value: file.name.replace(/\.[^/.]+$/, '') },
+                    fileName: { value: file.name },
+                    mediaType: { value: mediaType },
+                    isPublic: { value: 1 },
+                    allowComments: { value: 0 },
+                    viewCount: { value: 0 },
+                    createdAt: { value: Date.now() },
+                    username: { value: 'web-upload' },
+                    imageAsset: {
+                        value: {
+                            fileChecksum: '',
+                            size: file.size,
+                            data: base64Data
+                        }
+                    }
+                }
+            };
+
+            const response = await publicDB.saveRecords([record]);
+
+            if (response.hasErrors) {
+                throw new Error('Failed to save record: ' + JSON.stringify(response.errors));
+            }
+
+            return `${window.location.origin}${window.location.pathname}?id=${recordId}`;
+        }
+
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
 
         // Initialize
