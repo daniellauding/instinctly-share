@@ -6,6 +6,9 @@
     <title>Instinctly - Shared Content</title>
     <script src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js" async></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Firebase for comments -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script>
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -923,6 +926,117 @@
             font-size: 14px;
         }
 
+        .comment-auth-options {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .auth-option {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .auth-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .auth-option.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+            color: #a5b4fc;
+        }
+
+        .apple-signin-btn {
+            background: #000;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .apple-signin-btn:hover {
+            background: #333;
+        }
+
+        .apple-signin-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .verified-badge {
+            background: #22c55e;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+
+        .guest-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+
+        .comment-form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .comment-form-row input {
+            flex: 1;
+        }
+
+        .signed-in-as {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .signed-in-as .name {
+            font-weight: 600;
+            color: #22c55e;
+        }
+
+        .signed-in-as button {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .signed-in-as button:hover {
+            color: #fff;
+        }
+
         /* Upload Zone */
         .upload-zone {
             border: 2px dashed rgba(255, 255, 255, 0.3);
@@ -1401,11 +1515,15 @@
                         <h3>💬 Comments</h3>
                         <span class="comments-count" id="commentsCount">Loading...</span>
                     </div>
-                    <div class="comment-form">
-                        <input type="text" id="commentAuthor" placeholder="Your name (optional)" maxlength="50">
-                        <textarea id="commentText" placeholder="Leave a comment..." maxlength="500"></textarea>
+                    <div class="comment-form" id="commentForm">
+                        <div class="comment-form-row">
+                            <input type="text" id="commentAuthor" placeholder="Your name" maxlength="50">
+                            <input type="email" id="commentEmail" placeholder="Email (optional, for replies)" maxlength="100">
+                        </div>
+                        <textarea id="commentText" placeholder="Leave a comment..." maxlength="1000"></textarea>
                         <div class="comment-form-actions">
-                            <button class="btn btn-primary" onclick="submitComment('${shareId}')">Post Comment</button>
+                            <span style="font-size: 12px; color: rgba(255,255,255,0.5);">💡 Name & email are optional</span>
+                            <button class="btn btn-primary" onclick="submitCommentFirebase('${shareId}')">Post Comment</button>
                         </div>
                     </div>
                     <div class="comment-list" id="commentList">
@@ -1535,54 +1653,77 @@
             }
         }
 
-        // Comment Functions
+        // Firebase Configuration for Comments
+        // TODO: Replace with your Firebase config from https://console.firebase.google.com
+        const FIREBASE_CONFIG = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "instinctly-comments.firebaseapp.com",
+            databaseURL: "https://instinctly-comments-default-rtdb.firebaseio.com",
+            projectId: "instinctly-comments",
+            storageBucket: "instinctly-comments.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        let firebaseApp = null;
+        let firebaseDB = null;
+
+        function initFirebase() {
+            if (firebaseApp) return;
+            try {
+                if (typeof firebase !== 'undefined' && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY') {
+                    firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
+                    firebaseDB = firebase.database();
+                    console.log('🔥 Firebase initialized for comments');
+                }
+            } catch (e) {
+                console.log('Firebase not configured yet');
+            }
+        }
+
+        // Comment Functions - Firebase-based (allows anonymous comments!)
         async function loadComments(shareId) {
             const commentsContainer = document.getElementById('commentList');
             if (!commentsContainer) return;
 
+            initFirebase();
+
+            // If Firebase not configured, show placeholder
+            if (!firebaseDB) {
+                commentsContainer.innerHTML = '<p class="no-comments">Comments coming soon! 💬</p>';
+                document.getElementById('commentsCount').textContent = '';
+                return;
+            }
+
             try {
-                await ensureCloudKitReady();
+                const snapshot = await firebaseDB.ref(`comments/${shareId}`).orderByChild('createdAt').once('value');
+                const data = snapshot.val();
 
-                const query = {
-                    recordType: 'Comment',
-                    filterBy: [
-                        { fieldName: 'shareId', comparator: 'EQUALS', fieldValue: { value: shareId } }
-                    ],
-                    sortBy: [{ fieldName: 'createdAt', ascending: false }]
-                };
-
-                const response = await publicDB.performQuery(query);
-
-                if (response.hasErrors) {
-                    console.error('Failed to load comments:', response.errors);
-                    commentsContainer.innerHTML = '<p class="comment-error">Failed to load comments</p>';
-                    return;
-                }
-
-                const comments = response.records || [];
-
-                // Update comment count
-                const countEl = document.getElementById('commentsCount');
-                if (countEl) {
-                    countEl.textContent = `${comments.length} comment${comments.length !== 1 ? 's' : ''}`;
-                }
-
-                if (comments.length === 0) {
+                if (!data) {
                     commentsContainer.innerHTML = '<p class="no-comments">No comments yet. Be the first to comment!</p>';
+                    document.getElementById('commentsCount').textContent = '0 comments';
                     return;
                 }
+
+                // Convert to array and sort (newest first)
+                const comments = Object.entries(data)
+                    .map(([id, comment]) => ({ id, ...comment }))
+                    .sort((a, b) => b.createdAt - a.createdAt);
+
+                document.getElementById('commentsCount').textContent = `${comments.length} comment${comments.length !== 1 ? 's' : ''}`;
 
                 commentsContainer.innerHTML = comments.map(comment => {
-                    const fields = comment.fields;
-                    const author = fields.author?.value || 'Anonymous';
-                    const text = fields.text?.value || '';
-                    const createdAt = fields.createdAt?.value ? new Date(fields.createdAt.value) : new Date();
-                    const timeAgo = formatTimeAgo(createdAt);
+                    const author = comment.author || 'Guest';
+                    const isVerified = comment.verified === true;
+                    const timeAgo = formatTimeAgo(new Date(comment.createdAt));
 
                     return `
                         <div class="comment-item">
-                            <div class="comment-author">${escapeHtml(author)}</div>
-                            <div class="comment-text">${escapeHtml(text)}</div>
+                            <div class="comment-author">
+                                ${escapeHtml(author)}
+                                ${isVerified ? '<span class="verified-badge">✓ Verified</span>' : '<span class="guest-badge">Guest</span>'}
+                            </div>
+                            <div class="comment-text">${escapeHtml(comment.text)}</div>
                             <div class="comment-time">${timeAgo}</div>
                         </div>
                     `;
@@ -1594,14 +1735,16 @@
             }
         }
 
-        async function submitComment(shareId) {
+        async function submitCommentFirebase(shareId) {
             const authorInput = document.getElementById('commentAuthor');
+            const emailInput = document.getElementById('commentEmail');
             const textInput = document.getElementById('commentText');
             const submitBtn = document.querySelector('.comment-form .btn-primary');
 
-            if (!authorInput || !textInput) return;
+            if (!textInput) return;
 
-            const author = authorInput.value.trim() || 'Anonymous';
+            const author = authorInput?.value.trim() || 'Guest';
+            const email = emailInput?.value.trim() || '';
             const text = textInput.value.trim();
 
             if (!text) {
@@ -1609,31 +1752,32 @@
                 return;
             }
 
-            // Disable form while submitting
+            initFirebase();
+
+            if (!firebaseDB) {
+                alert('Comments are being set up. Please try again later!');
+                return;
+            }
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'Posting...';
 
             try {
-                await ensureCloudKitReady();
+                const commentRef = firebaseDB.ref(`comments/${shareId}`).push();
+                await commentRef.set({
+                    author: author,
+                    email: email, // Stored but not displayed (for reply notifications)
+                    text: text,
+                    createdAt: Date.now(),
+                    verified: false // Would be true if signed in with Apple
+                });
 
-                const record = {
-                    recordType: 'Comment',
-                    fields: {
-                        shareId: { value: shareId },
-                        author: { value: author },
-                        text: { value: text },
-                        createdAt: { value: Date.now() }
-                    }
-                };
-
-                const response = await publicDB.saveRecords([record]);
-
-                if (response.hasErrors) {
-                    throw new Error('Failed to save comment');
-                }
-
-                // Clear form and reload comments
+                // Clear form
                 textInput.value = '';
+                if (authorInput) authorInput.value = '';
+                if (emailInput) emailInput.value = '';
+
+                // Reload comments
                 await loadComments(shareId);
 
             } catch (error) {
@@ -1643,6 +1787,11 @@
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Post Comment';
             }
+        }
+
+        // Legacy CloudKit comment function (fallback)
+        async function submitComment(shareId) {
+            return submitCommentFirebase(shareId);
         }
 
         function formatTimeAgo(date) {
