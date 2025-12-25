@@ -1431,21 +1431,18 @@
                     const currentCount = record.fields.viewCount?.value || 0;
                     console.log('📊 Current count:', currentCount, 'incrementing to:', currentCount + 1);
 
-                    // Update with incremented count
-                    const operations = [{
-                        operationType: 'update',
-                        record: {
-                            recordType: 'SharedImage',
-                            recordName: shareId,
-                            recordChangeTag: record.recordChangeTag,
-                            fields: {
-                                viewCount: { value: currentCount + 1 }
-                            }
+                    // Update with incremented count using saveRecords
+                    const updatedRecord = {
+                        recordType: 'SharedImage',
+                        recordName: shareId,
+                        recordChangeTag: record.recordChangeTag,
+                        fields: {
+                            viewCount: { value: currentCount + 1 }
                         }
-                    }];
+                    };
 
-                    await publicDB.performBatchOperations(operations);
-                    console.log('View count incremented to', currentCount + 1);
+                    await publicDB.saveRecords([updatedRecord]);
+                    console.log('✅ View count incremented to', currentCount + 1);
                 }
             } catch (error) {
                 console.log('Could not increment view count:', error.message);
@@ -1584,7 +1581,7 @@
                         </div>
                     `;
                     // Initialize PDF.js after DOM update
-                    setTimeout(() => renderPDF('${downloadURL}'), 100);
+                    setTimeout(() => renderPDF("${downloadURL}"), 100);
                     actionsHTML = `
                         <a href="${downloadURL}" download="${title}.pdf" class="btn btn-primary">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
