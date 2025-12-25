@@ -1037,6 +1037,168 @@
             color: #fff;
         }
 
+        /* Comment actions (like, reply) */
+        .comment-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .comment-action {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: color 0.2s;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .comment-action:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .comment-action.liked {
+            color: #ff6b6b;
+        }
+
+        .comment-replies {
+            margin-left: 24px;
+            margin-top: 8px;
+            padding-left: 12px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comment-reply-form {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .comment-reply-form input {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .comment-reply-form button {
+            padding: 8px 12px;
+            background: #667eea;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Comments toggle button */
+        .comments-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: transform 0.2s;
+        }
+
+        .comments-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .comments-toggle .count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ff6b6b;
+            color: #fff;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Comments panel (slide-in) */
+        .comments-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(26, 26, 46, 0.98);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1001;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comments-panel.open {
+            right: 0;
+        }
+
+        .comments-panel-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .comments-panel-header h3 {
+            margin: 0;
+        }
+
+        .comments-panel-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .comments-panel-close:hover {
+            opacity: 1;
+        }
+
+        .comments-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .comments-panel-form {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 500px) {
+            .comments-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
         /* Upload Zone */
         .upload-zone {
             border: 2px dashed rgba(255, 255, 255, 0.3);
@@ -1315,17 +1477,32 @@
         async function verifyPassword() {
             const password = document.getElementById('password-input').value;
             const hash = await hashPassword(password);
+            const shareId = getShareId();
 
             if (hash === storedPasswordHash) {
                 document.getElementById('password-error').style.display = 'none';
+                // Save password for future visits
+                savePasswordForShare(shareId, password);
                 // Increment view count on successful unlock
-                incrementViewCount(getShareId());
+                incrementViewCount(shareId);
                 displayContent(currentRecord);
             } else {
                 document.getElementById('password-error').style.display = 'block';
                 document.getElementById('password-input').value = '';
                 document.getElementById('password-input').focus();
             }
+        }
+
+        // Try auto-unlock with saved password
+        async function tryAutoUnlock(shareId, passwordHash) {
+            const savedPassword = getPasswordForShare(shareId);
+            if (savedPassword) {
+                const hash = await hashPassword(savedPassword);
+                if (hash === passwordHash) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         // Display content based on media type
@@ -1517,8 +1694,8 @@
                     </div>
                     <div class="comment-form" id="commentForm">
                         <div class="comment-form-row">
-                            <input type="text" id="commentAuthor" placeholder="Your name" maxlength="50">
-                            <input type="email" id="commentEmail" placeholder="Email (optional, for replies)" maxlength="100">
+                            <input type="text" id="commentAuthor" placeholder="Your name" maxlength="50" value="${localStorage.getItem('instinctly_commenter_name') || ''}">
+                            <input type="email" id="commentEmail" placeholder="Email (optional, for replies)" maxlength="100" value="${localStorage.getItem('instinctly_commenter_email') || ''}">
                         </div>
                         <textarea id="commentText" placeholder="Leave a comment..." maxlength="1000"></textarea>
                         <div class="comment-form-actions">
@@ -1653,8 +1830,41 @@
             }
         }
 
+        // Password persistence in localStorage
+        function savePasswordForShare(shareId, password) {
+            try {
+                const passwords = JSON.parse(localStorage.getItem('instinctly_passwords') || '{}');
+                passwords[shareId] = password;
+                localStorage.setItem('instinctly_passwords', JSON.stringify(passwords));
+            } catch (e) { console.log('Could not save password'); }
+        }
+
+        function getPasswordForShare(shareId) {
+            try {
+                const passwords = JSON.parse(localStorage.getItem('instinctly_passwords') || '{}');
+                return passwords[shareId] || null;
+            } catch (e) { return null; }
+        }
+
+        // Like persistence in localStorage
+        function hasLikedComment(commentId) {
+            try {
+                const likes = JSON.parse(localStorage.getItem('instinctly_likes') || '[]');
+                return likes.includes(commentId);
+            } catch (e) { return false; }
+        }
+
+        function saveLikedComment(commentId) {
+            try {
+                const likes = JSON.parse(localStorage.getItem('instinctly_likes') || '[]');
+                if (!likes.includes(commentId)) {
+                    likes.push(commentId);
+                    localStorage.setItem('instinctly_likes', JSON.stringify(likes));
+                }
+            } catch (e) { console.log('Could not save like'); }
+        }
+
         // Firebase Configuration for Comments
-        // TODO: Replace with your Firebase config from https://console.firebase.google.com
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyCkbqeO6JnWFNnGJzjkcLg04u7OBW7x_kU",
             authDomain: "instinctly-comments.firebaseapp.com",
@@ -1716,15 +1926,41 @@
                     const author = comment.author || 'Guest';
                     const isVerified = comment.verified === true;
                     const timeAgo = formatTimeAgo(new Date(comment.createdAt));
+                    const likes = comment.likes || 0;
+                    const hasLiked = hasLikedComment(comment.id);
+                    const replies = comment.replies ? Object.values(comment.replies) : [];
 
                     return `
-                        <div class="comment-item">
+                        <div class="comment-item" data-id="${comment.id}">
                             <div class="comment-author">
                                 ${escapeHtml(author)}
                                 ${isVerified ? '<span class="verified-badge">✓ Verified</span>' : '<span class="guest-badge">Guest</span>'}
                             </div>
                             <div class="comment-text">${escapeHtml(comment.text)}</div>
-                            <div class="comment-time">${timeAgo}</div>
+                            <div class="comment-actions">
+                                <button class="comment-action ${hasLiked ? 'liked' : ''}" onclick="likeComment('${shareId}', '${comment.id}')">
+                                    ${hasLiked ? '❤️' : '🤍'} ${likes > 0 ? likes : ''}
+                                </button>
+                                <button class="comment-action" onclick="toggleReplyForm('${comment.id}')">
+                                    💬 Reply
+                                </button>
+                                <span class="comment-time">${timeAgo}</span>
+                            </div>
+                            <div class="comment-reply-form" id="reply-form-${comment.id}" style="display: none;">
+                                <input type="text" placeholder="Write a reply..." id="reply-input-${comment.id}">
+                                <button onclick="submitReply('${shareId}', '${comment.id}')">Reply</button>
+                            </div>
+                            ${replies.length > 0 ? `
+                                <div class="comment-replies">
+                                    ${replies.map(reply => `
+                                        <div class="comment-item">
+                                            <div class="comment-author">${escapeHtml(reply.author || 'Guest')} <span class="guest-badge">Guest</span></div>
+                                            <div class="comment-text">${escapeHtml(reply.text)}</div>
+                                            <div class="comment-time">${formatTimeAgo(new Date(reply.createdAt))}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 }).join('');
@@ -1769,13 +2005,20 @@
                     email: email, // Stored but not displayed (for reply notifications)
                     text: text,
                     createdAt: Date.now(),
-                    verified: false // Would be true if signed in with Apple
+                    verified: false, // Would be true if signed in with Apple
+                    likes: 0
                 });
 
-                // Clear form
+                // Save name for future comments/replies
+                if (author !== 'Guest') {
+                    localStorage.setItem('instinctly_commenter_name', author);
+                }
+                if (email) {
+                    localStorage.setItem('instinctly_commenter_email', email);
+                }
+
+                // Clear form (but keep name/email for convenience)
                 textInput.value = '';
-                if (authorInput) authorInput.value = '';
-                if (emailInput) emailInput.value = '';
 
                 // Reload comments
                 await loadComments(shareId);
@@ -1792,6 +2035,70 @@
         // Legacy CloudKit comment function (fallback)
         async function submitComment(shareId) {
             return submitCommentFirebase(shareId);
+        }
+
+        // Like a comment
+        async function likeComment(shareId, commentId) {
+            if (hasLikedComment(commentId)) return; // Already liked
+
+            initFirebase();
+            if (!firebaseDB) return;
+
+            try {
+                const commentRef = firebaseDB.ref(`comments/${shareId}/${commentId}/likes`);
+                const snapshot = await commentRef.once('value');
+                const currentLikes = snapshot.val() || 0;
+                await commentRef.set(currentLikes + 1);
+
+                saveLikedComment(commentId);
+                await loadComments(shareId);
+            } catch (error) {
+                console.error('Error liking comment:', error);
+            }
+        }
+
+        // Toggle reply form
+        function toggleReplyForm(commentId) {
+            const form = document.getElementById(`reply-form-${commentId}`);
+            if (form) {
+                form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+                if (form.style.display === 'flex') {
+                    form.querySelector('input').focus();
+                }
+            }
+        }
+
+        // Submit a reply
+        async function submitReply(shareId, commentId) {
+            const input = document.getElementById(`reply-input-${commentId}`);
+            if (!input || !input.value.trim()) return;
+
+            initFirebase();
+            if (!firebaseDB) return;
+
+            try {
+                const savedName = localStorage.getItem('instinctly_commenter_name') || 'Guest';
+                const replyRef = firebaseDB.ref(`comments/${shareId}/${commentId}/replies`).push();
+                await replyRef.set({
+                    author: savedName,
+                    text: input.value.trim(),
+                    createdAt: Date.now()
+                });
+
+                input.value = '';
+                toggleReplyForm(commentId);
+                await loadComments(shareId);
+            } catch (error) {
+                console.error('Error submitting reply:', error);
+            }
+        }
+
+        // Toggle comments panel
+        function toggleCommentsPanel() {
+            const panel = document.getElementById('commentsPanel');
+            if (panel) {
+                panel.classList.toggle('open');
+            }
         }
 
         function formatTimeAgo(date) {
@@ -2814,8 +3121,16 @@
                 storedPasswordHash = record.fields.passwordHash?.value;
 
                 if (storedPasswordHash) {
-                    updateStatus('Password required');
-                    showPasswordForm();
+                    // Try auto-unlock with saved password
+                    const autoUnlocked = await tryAutoUnlock(shareId, storedPasswordHash);
+                    if (autoUnlocked) {
+                        updateStatus('Auto-unlocked with saved password');
+                        incrementViewCount(shareId);
+                        displayContent(record);
+                    } else {
+                        updateStatus('Password required');
+                        showPasswordForm();
+                    }
                 } else {
                     // Increment view count for non-protected content
                     incrementViewCount(shareId);
