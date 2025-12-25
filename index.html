@@ -2125,41 +2125,29 @@
             const viewer = document.getElementById('pdfViewer');
             if (!viewer) return;
 
-            // Check if PDF.js is loaded
-            if (typeof pdfjsLib === 'undefined') {
-                viewer.innerHTML = `
-                    <div class="pdf-fallback">
-                        <p>PDF viewer loading failed. <a href="${url}" target="_blank">Download PDF instead</a></p>
-                    </div>
-                `;
-                return;
-            }
+            // Try Google Docs viewer first (most reliable for iCloud URLs)
+            const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
 
-            try {
-                // Fetch PDF as blob to bypass CORS/Content-Disposition issues
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const arrayBuffer = await blob.arrayBuffer();
+            viewer.innerHTML = `
+                <iframe
+                    src="${googleViewerUrl}"
+                    style="width: 100%; height: 70vh; border: none; border-radius: 8px;"
+                    frameborder="0"
+                    allowfullscreen>
+                </iframe>
+                <div style="text-align: center; margin-top: 12px;">
+                    <a href="${url}" target="_blank" class="btn btn-secondary" style="margin-right: 8px;">
+                        Open Original
+                    </a>
+                    <a href="${url}" download class="btn btn-primary">
+                        Download PDF
+                    </a>
+                </div>
+            `;
 
-                // Load PDF document
-                pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
-                document.getElementById('pdfPageCount').textContent = pdfDoc.numPages;
-                document.getElementById('pdfNextBtn').disabled = pdfDoc.numPages <= 1;
-
-                // Clear loading state and render first page
-                viewer.innerHTML = '';
-                await renderPDFPage(pdfCurrentPage);
-
-            } catch (error) {
-                console.error('PDF load error:', error);
-                viewer.innerHTML = `
-                    <div class="pdf-fallback">
-                        <p>Failed to load PDF preview.</p>
-                        <a href="${url}" target="_blank" class="btn btn-primary" style="margin-top: 16px;">Download PDF</a>
-                    </div>
-                `;
-            }
+            // Hide the PDF controls since Google viewer has its own
+            const controls = document.querySelector('.pdf-controls');
+            if (controls) controls.style.display = 'none';
         }
 
         async function renderPDFPage(pageNum) {
