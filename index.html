@@ -1502,6 +1502,15 @@
             return false;
         }
 
+        // CloudKit asset downloadURLs contain a literal ${f} filename placeholder.
+        // It must be substituted or the CDN serves application/octet-stream,
+        // which iOS Safari refuses to play for <video>/<audio>.
+        function resolveAssetURL(asset, fileName) {
+            const url = asset?.downloadURL;
+            if (!url) return url;
+            return url.replace('${f}', encodeURIComponent(fileName || 'file'));
+        }
+
         // Display content based on media type
         function displayContent(record) {
             const content = document.getElementById('content');
@@ -1516,7 +1525,7 @@
             const isPublic = (fields.isPublic?.value || 0) === 1;
             const allowComments = (fields.allowComments?.value ?? 1) === 1; // Default to true for old records
             const asset = fields.imageAsset?.value;
-            const downloadURL = asset?.downloadURL;
+            const downloadURL = resolveAssetURL(asset, fields.fileName?.value);
             const shareId = record.recordName;
 
             let mediaHTML = '';
@@ -1535,7 +1544,7 @@
                     break;
 
                 case 'video':
-                    mediaHTML = `<video src="${downloadURL}" controls autoplay class="shared-video" id="sharedMedia"></video>`;
+                    mediaHTML = `<video src="${downloadURL}" controls autoplay playsinline class="shared-video" id="sharedMedia"></video>`;
                     actionsHTML = `
                         <a href="${downloadURL}" download="${title}" class="btn btn-primary">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
@@ -2346,7 +2355,7 @@
                 const description = fields.description?.value || '';
                 const mediaType = fields.mediaType?.value || 'image';
                 const asset = fields.imageAsset?.value;
-                const downloadURL = asset?.downloadURL;
+                const downloadURL = resolveAssetURL(asset, fields.fileName?.value);
                 const recordId = record.recordName;
                 const viewCount = fields.viewCount?.value || 0;
                 const hasPassword = !!fields.passwordHash?.value;
@@ -2634,7 +2643,7 @@
                                 const description = fields.description?.value || '';
                                 const mediaType = fields.mediaType?.value || 'image';
                                 const asset = fields.imageAsset?.value;
-                                const downloadURL = asset?.downloadURL;
+                                const downloadURL = resolveAssetURL(asset, fields.fileName?.value);
                                 const recordId = record.recordName;
                                 const viewCount = fields.viewCount?.value || 0;
                                 const username = fields.username?.value || '';
@@ -2792,7 +2801,7 @@
                 const itemDescription = fields.description?.value || '';
                 const mediaType = fields.mediaType?.value || 'image';
                 const asset = fields.imageAsset?.value;
-                const downloadURL = asset?.downloadURL;
+                const downloadURL = resolveAssetURL(asset, fields.fileName?.value);
                 const recordId = record.recordName;
                 const viewCount = fields.viewCount?.value || 0;
                 const hasPassword = !!fields.passwordHash?.value;
