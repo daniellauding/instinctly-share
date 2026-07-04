@@ -1416,33 +1416,31 @@
             throw new Error('Content not found');
         }
 
-        // Increment view count
+        // View counting lives in Firebase: CloudKit public DB rejects writes from
+        // anonymous web visitors (AUTHENTICATION_REQUIRED), so the old CloudKit
+        // increment never worked. The displayed total is the legacy CloudKit
+        // viewCount plus the Firebase counter at views/<shareId>.
+        let cloudKitViewCount = 0;
+        let firebaseViewCount = 0;
+
+        function updateViewCountDisplay() {
+            const el = document.getElementById('viewCountDisplay');
+            if (el) {
+                el.textContent = `👁 ${cloudKitViewCount + firebaseViewCount} views`;
+            }
+        }
+
         async function incrementViewCount(shareId) {
-            console.log('📊 Incrementing view count for:', shareId);
             try {
-                await ensureCloudKitReady();
+                initFirebase();
+                if (!firebaseDB) return;
 
-                // Fetch current record
-                const response = await publicDB.fetchRecords([shareId]);
-                console.log('📊 Fetch response:', response);
-
-                if (response.records && response.records.length > 0) {
-                    const record = response.records[0];
-                    const currentCount = record.fields.viewCount?.value || 0;
-                    console.log('📊 Current count:', currentCount, 'incrementing to:', currentCount + 1);
-
-                    // Update with incremented count using saveRecords
-                    const updatedRecord = {
-                        recordType: 'SharedImage',
-                        recordName: shareId,
-                        recordChangeTag: record.recordChangeTag,
-                        fields: {
-                            viewCount: { value: currentCount + 1 }
-                        }
-                    };
-
-                    await publicDB.saveRecords([updatedRecord]);
-                    console.log('✅ View count incremented to', currentCount + 1);
+                const result = await firebaseDB.ref(`views/${shareId}`).transaction(
+                    current => (current || 0) + 1
+                );
+                if (result.committed) {
+                    firebaseViewCount = result.snapshot.val() || 0;
+                    updateViewCountDisplay();
                 }
             } catch (error) {
                 console.log('Could not increment view count:', error.message);
@@ -1520,6 +1518,7 @@
             const description = fields.description?.value || '';
             const mediaType = fields.mediaType?.value || 'image';
             const viewCount = fields.viewCount?.value || 0;
+            cloudKitViewCount = viewCount;
             const collection = fields.collection?.value;
             const username = fields.username?.value || '';
             const isPublic = (fields.isPublic?.value || 0) === 1;
@@ -1673,7 +1672,7 @@
                             ${username && isPublic ? `<a href="?user=${escapeHtml(username)}" class="profile-link" style="display: inline-flex; align-items: center; gap: 4px; color: #a5b4fc; text-decoration: none; font-size: 13px; margin-top: 6px;">👤 @${escapeHtml(username)}</a>` : ''}
                         </div>
                         <div class="meta-info">
-                            <span>👁 ${viewCount} views</span>
+                            <span id="viewCountDisplay">👁 ${viewCount + firebaseViewCount} views</span>
                             <span>${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)}</span>
                         </div>
                     </div>
@@ -2008,12 +2007,18 @@
                 const commentRef = firebaseDB.ref(`comments/${shareId}`).push();
                 await commentRef.set({
                     author: author,
-                    email: email, // Stored but not displayed (for reply notifications)
                     text: text,
                     createdAt: Date.now(),
                     verified: false, // Would be true if signed in with Apple
                     likes: 0
                 });
+
+                // Email is stored in a separate branch that security rules make
+                // write-once and never publicly readable (comments/* is world-readable).
+                if (email) {
+                    firebaseDB.ref(`commentEmails/${shareId}/${commentRef.key}`).set(email)
+                        .catch(() => { /* non-critical */ });
+                }
 
                 // Save name for future comments/replies
                 if (author !== 'Guest') {
